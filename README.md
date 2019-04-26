@@ -7,7 +7,7 @@ Total mess. Currently in experimentation phase. This repo is here only to allow 
 ## Changelog
 
 **2019-04-26**
-Currently I have some drafts of GUI, Mod Organizer 2 support, Wrye Bash support. Nothing is working. My focus is now on creating
+Currently I have some drafts of GUI, Mod Organizer 2 support, Wrye Bash support. Nothing is working. My focus is now on codding modpack creator. Will be back when something will actually work.
 
 
 ## Planned features
