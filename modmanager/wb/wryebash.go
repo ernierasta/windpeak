@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -16,7 +17,22 @@ import (
 	home "github.com/mitchellh/go-homedir"
 )
 
+// load order info: https://forums.nexusmods.com/index.php?/topic/2585349-how-exactly-does-the-oblivion-load-order-work/
+// only modify date on esp/esm file matters, esm goes before esp
+
+// which esp's are loaded is determined by file:
+// C:\Users\ernie\AppData\Local\Oblivion\Plugins.txt
+
+// use cli "Wrey Bash.exe" -b -f somefile.7z and -r -f somefile.7z to restore!
+
 func main() {
+
+	ff, _ := getLoadOrder(`C:\Games\Oblivion\Data`)
+	for _, f := range ff {
+		_ = f
+		//fmt.Println(f.Name())
+	}
+
 	beforeData, err := getDirStructure(`C:\Games\Oblivion\Data`)
 	if err != nil {
 		fmt.Println(err)
@@ -55,15 +71,15 @@ func main() {
 		fmt.Println(err)
 	}
 
-	removedDD := difference(beforeData, afterData)
+	//removedDD := difference(beforeData, afterData)
 	addedDD := difference(afterData, beforeData)
-	removedMD := difference(beforeModsDir, afterModsDir)
+	//removedMD := difference(beforeModsDir, afterModsDir)
 	addedMD := difference(afterModsDir, beforeModsDir)
 	changesHD := difference(afterHomeDir, beforeHomeDir)
 	p(addedDD, "DATA Dir added:")
-	p(removedDD, "DATA Dir removed:")
+	//p(removedDD, "DATA Dir removed:")
 	p(addedMD, "MOD DIR added:")
-	p(removedMD, "MOD DIR removed:")
+	//p(removedMD, "MOD DIR removed:")
 	p(changesHD, "Home changes:")
 
 	//fmt.Println("before:", beforeModsDir)
@@ -96,6 +112,9 @@ func getDirStructure(dir string) (map[string]string, error) {
 }
 
 func makeID(info os.FileInfo) string {
+	if info.IsDir() { // skip dirs
+		return ""
+	}
 	return strconv.FormatInt(info.ModTime().Unix()+info.Size(), 10)
 }
 
@@ -134,7 +153,9 @@ func difference(a, b map[string]string) map[string]string {
 
 	ret := map[string]string{}
 	for ka, va := range a {
-		if vb, ok := b[ka]; !ok || va != vb { // if key is missing or md5 different
+		// return if key is missing or key is there, but value is different for files other then esp or esm
+		// we are avoiding returning files changed becouse of load order reorganization
+		if vb, ok := b[ka]; !ok || (va != vb && filepath.Ext(ka) != ".esp" && filepath.Ext(ka) != ".esm") { // if key is missing or value different
 			ret[ka] = vb
 		}
 	}
@@ -162,4 +183,25 @@ func DiffPrettyText(diffs []diffmatchpatch.Diff) string {
 	}
 
 	return buff.String()
+}
+
+func getLoadOrder(dir string) ([]os.FileInfo, error) {
+	esps := []os.FileInfo{}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && path != dir {
+			return filepath.SkipDir
+		}
+		if filepath.Ext(path) == ".esp" || filepath.Ext(path) == ".esm" {
+			esps = append(esps, info)
+		}
+		return nil
+	})
+
+	sort.Slice(esps, func(i, j int) bool {
+		return esps[i].ModTime().Unix() < esps[j].ModTime().Unix()
+	})
+	return esps, err
 }
