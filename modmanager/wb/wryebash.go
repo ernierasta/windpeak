@@ -24,6 +24,9 @@ import (
 // C:\Users\ernie\AppData\Local\Oblivion\Plugins.txt
 
 // use cli "Wrey Bash.exe" -b -f somefile.7z and -r -f somefile.7z to restore!
+// quite oposite, try to copy Plugins.txt to user AppData and delete LoadOrder.dat file from My Games.
+
+//TODO: implement nexus mod api
 
 func main() {
 
