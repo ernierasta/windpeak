@@ -25,8 +25,8 @@ import (
 
 // use cli "Wrey Bash.exe" -b -f somefile.7z and -r -f somefile.7z to restore!
 // quite oposite, try to copy Plugins.txt to user AppData and delete LoadOrder.dat file from My Games.
-
-//TODO: implement nexus mod api
+// FACT: Wrye Bash will honor loadorder (dictated by esp modification time) and Plugins.txt for enabled mods.
+// So no need for any hacks, just set load order and plugins and you are ready to go.
 
 func main() {
 

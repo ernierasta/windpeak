@@ -12,12 +12,42 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/browser"
 	uuid "github.com/satori/go.uuid"
+	flag "github.com/spf13/pflag"
 )
 
+var (
+	download string
+)
+
+func init() {
+	flag.StringVar(&download, "download", "", "used for NexusMod downloads")
+}
+
 func main() {
+	flag.Parse()
+	binaryPath, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	logPath := binaryPath[:len(binaryPath)-3] + "log"
+	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+
+	log.SetOutput(f)
+	log.Println("starting!")
+
+	if download != "" {
+		log.Println("We have something!")
+		log.Println(download)
+		os.Exit(0)
+	}
+
 	fid := "uuid.txt"
 	fkey := "apikey.ini"
-	err := writeConfig(fid)
+	err = writeConfig(fid)
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +62,7 @@ func main() {
 	apikey, err := ioutil.ReadFile(fkey)
 	if err != nil {
 		log.Println(err)
-		//ws(u)
+		ws(u)
 	}
 
 	fmt.Println(string(apikey))
@@ -41,7 +71,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	register_nxm(self)
+	registerNxm(self)
 }
 
 func writeConfig(file string) error {
@@ -81,7 +111,9 @@ func readConfig(file string) (string, error) {
 func ws(windpeakID string) string {
 
 	jRegister := fmt.Sprintf("{ \"id\": \"%s\", \"appid\": \"Windpeak\" }", windpeakID)
-	lRegister := fmt.Sprintf("https://www.nexusmods.com/sso?id=%s&application=Windpeak", windpeakID)
+	// TODO: talk to Nexus, register Windpeak as app there, than add this to the end of url:
+	// &application=Windpeak
+	lRegister := fmt.Sprintf("https://www.nexusmods.com/sso?id=%s", windpeakID)
 
 	apikey := ""
 
