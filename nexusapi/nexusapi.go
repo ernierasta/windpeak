@@ -28,6 +28,19 @@
 //
 // Example usage:
 //
+//   fmt.Println("check your browser! it waits for confirmation")
+//	 uu, err := uuid.NewV4()
+//	 n := New("My app test", "0.1", myuuid.String(), "")
+//	 c := make(chan os.Signal, 1)
+//	 signal.Notify(c, os.Interrupt)
+//
+//	 apikey, err := n.RegisterTest(c)
+//	 if err != nil {
+//		 fmt.Println(err)
+//	 }
+//   fmt.Println(apikey)
+//
+// For more examples look into test file in this dir.
 package nexusapi
 
 import (
