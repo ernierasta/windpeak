@@ -8,7 +8,8 @@ Total mess. Currently in experimentation phase. This repo is here only to allow 
 
 **2019-04-26**
 Currently I have some drafts of GUI, Mod Organizer 2 support, Wrye Bash support. Nothing is working. My focus is now on codding modpack creator. Will be back when something will actually work.
-
+**2019-04-30**
+Wasted some time by investigating EOF error from Nexus websocket - turns out, that reusing UUID will make nexus just drop connection. It was quite random (probably there is load balancer). I have first production code in **nexusapi** dir. I had implemented NXM handler on Windows and Linux, but is not here yet, more work needed. Now I need to implement automatic mod definitions(from MO2 and WB) and start making modpack creator GUI.
 
 ## Planned features
 
