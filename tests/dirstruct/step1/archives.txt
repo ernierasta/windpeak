@@ -1,0 +1,17 @@
+Oblivion - Misc.bsa
+Oblivion - Textures - Compressed.bsa
+Oblivion - Meshes.bsa
+Oblivion - Sounds.bsa
+Oblivion - Voices1.bsa
+Oblivion - Voices2.bsa
+Knights.bsa
+DLCVileLair.bsa
+DLCThievesDen.bsa
+DLCShiveringIsles - Meshes.bsa
+DLCShiveringIsles - Sounds.bsa
+DLCShiveringIsles - Textures.bsa
+DLCShiveringIsles - Voices.bsa
+DLCOrrery.bsa
+DLCHorseArmor.bsa
+DLCFrostcrag.bsa
+DLCBattlehornCastle.bsa
