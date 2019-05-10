@@ -59,8 +59,10 @@ import (
 )
 
 const (
+	// URLBASE contains nexus api server address
 	URLBASE = "https://api.nexusmods.com"
-	APIVER  = "v1"
+	// APIVER contains nexus api version
+	APIVER = "v1"
 )
 
 // Mod contains data neccessary to work with API.
@@ -99,10 +101,70 @@ type ModInfo struct {
 	ChangelogHTML        string    `json:"changelog_html"`
 }
 
+// ModMD5Info represents enormous amount of info returned
+// when searching for mod by md5 hash
+type ModMD5Info []struct {
+	Mod struct {
+		Name                    string    `json:"name"`
+		Summary                 string    `json:"summary"`
+		Description             string    `json:"description"`
+		PictureURL              string    `json:"picture_url"`
+		ModID                   int       `json:"mod_id"`
+		GameID                  int       `json:"game_id"`
+		DomainName              string    `json:"domain_name"`
+		CategoryID              int       `json:"category_id"`
+		Version                 string    `json:"version"`
+		CreatedTimestamp        int       `json:"created_timestamp"`
+		CreatedTime             time.Time `json:"created_time"`
+		UpdatedTimestamp        int       `json:"updated_timestamp"`
+		UpdatedTime             time.Time `json:"updated_time"`
+		Author                  string    `json:"author"`
+		UploadedBy              string    `json:"uploaded_by"`
+		UploadedUsersProfileURL string    `json:"uploaded_users_profile_url"`
+		ContainsAdultContent    bool      `json:"contains_adult_content"`
+		Status                  string    `json:"status"`
+		Available               bool      `json:"available"`
+		User                    struct {
+			MemberID      int    `json:"member_id"`
+			MemberGroupID int    `json:"member_group_id"`
+			Name          string `json:"name"`
+		} `json:"user"`
+		Endorsement interface{} `json:"endorsement"`
+	} `json:"mod"`
+	FileDetails struct {
+		FileID               int         `json:"file_id"`
+		Name                 string      `json:"name"`
+		Version              string      `json:"version"`
+		CategoryID           int         `json:"category_id"`
+		CategoryName         string      `json:"category_name"`
+		IsPrimary            bool        `json:"is_primary"`
+		Size                 int         `json:"size"`
+		FileName             string      `json:"file_name"`
+		UploadedTimestamp    int         `json:"uploaded_timestamp"`
+		UploadedTime         time.Time   `json:"uploaded_time"`
+		ModVersion           string      `json:"mod_version"`
+		ExternalVirusScanURL string      `json:"external_virus_scan_url"`
+		ChangelogHTML        interface{} `json:"changelog_html"`
+		Md5                  string      `json:"md5"`
+	} `json:"file_details"`
+}
+
+// NexusError represent message sent when error occured.
+// It implements error interface, so it is used as sentinel error.
+type NexusError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func (ne *NexusError) Error() string {
+	return fmt.Sprintf("Code: %d, Text: %s", ne.Code, ne.Message)
+}
+
 // Nexus represents NexusMods connection.
 type Nexus struct {
 	appName, appVersion string
 	appUUID, apikey     string
+	premium             bool
 	chanDone            chan struct{}
 	chanInterrupt       chan os.Signal
 	reterr              error
@@ -150,9 +212,9 @@ func (n *Nexus) RegisterTest(exit chan os.Signal) (string, error) {
 
 // GetModDownloadLink returns mod file download link.
 func (n *Nexus) GetModDownloadLink(mod *Mod) (string, error) {
-	jsonFile := "/download_link.json"
+	urlPart := fmt.Sprintf("/mods/%d/files/%d/download_link.json", mod.ID, mod.FileID)
 
-	body, err := n.getResponseBody(jsonFile, mod)
+	body, err := n.getResponseBody(n.createURL(urlPart, mod, true))
 	if err != nil {
 		return "", err
 	}
@@ -167,11 +229,11 @@ func (n *Nexus) GetModDownloadLink(mod *Mod) (string, error) {
 	return md[0].URI, nil
 }
 
-// GetModInfo returns mod metadata.
-func (n *Nexus) GetModInfo(mod *Mod) (*ModInfo, error) {
-	jsonFile := ".json"
+// GetModFileInfo returns file metadata.
+func (n *Nexus) GetModFileInfo(mod *Mod) (*ModInfo, error) {
+	urlPart := fmt.Sprintf("/mods/%d/files/%d.json", mod.ID, mod.FileID)
 
-	body, err := n.getResponseBody(jsonFile, mod)
+	body, err := n.getResponseBody(n.createURL(urlPart, mod, false))
 	if err != nil {
 		return &ModInfo{}, err
 	}
@@ -185,8 +247,27 @@ func (n *Nexus) GetModInfo(mod *Mod) (*ModInfo, error) {
 	return mi, nil
 }
 
-// createHeaders creates correct headers, example output:
-//   User-Agent:
+// GetModByMD5 retrieves info from nexus based on file MD5 hash.
+// This is very good way to retrieve info it You have only downloaded
+// file.
+func (n *Nexus) GetModByMD5(md5, game string) (*ModMD5Info, error) {
+	urlPart := fmt.Sprintf("/mods/md5_search/%s.json", md5)
+
+	body, err := n.getResponseBody(n.createURL(urlPart, &Mod{Game: game}, false))
+	if err != nil {
+		return &ModMD5Info{}, err
+	}
+
+	mi := &ModMD5Info{}
+	err = json.Unmarshal(body, mi)
+	if err != nil {
+		return mi, err
+	}
+	return mi, nil
+
+}
+
+// createHeaders creates correct headers
 func (n *Nexus) createHeaders(h http.Header) http.Header {
 	h.Add("content-type", "application/json")
 	h.Add("apikey", n.apikey)
@@ -194,11 +275,25 @@ func (n *Nexus) createHeaders(h http.Header) http.Header {
 	return h
 }
 
-func (n *Nexus) getResponseBody(jsonFile string, m *Mod) ([]byte, error) {
-	// non-premium link type
-	url := URLBASE + "/" + APIVER + "/games/" + m.Game + "/mods/" + strconv.Itoa(m.ID) +
-		"/files/" + strconv.Itoa(m.FileID) + jsonFile + "?key=" + m.Key + "&expires=" +
-		strconv.Itoa(m.Expires) + "&user_id=" + strconv.Itoa(m.UserID)
+// createURL creates final URL, sendKey decides if we need to send,
+// key=XX&expires=123 pair
+func (n *Nexus) createURL(urlPart string, m *Mod, sendKey bool) string {
+	url := ""
+	if n.premium || !sendKey {
+		url = URLBASE + "/" + APIVER + "/games/" + m.Game + urlPart
+	} else {
+		url = URLBASE + "/" + APIVER + "/games/" + m.Game + urlPart +
+			"?key=" + m.Key + "&expires=" + strconv.Itoa(m.Expires)
+	}
+	return url
+
+}
+
+// getResponseBody retrieves message from api. Error is returned if
+// there is problem while sending/receiving message or when error is
+// returned from nexus.
+// You can do error type asserntion to get error code.
+func (n *Nexus) getResponseBody(url string) ([]byte, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -216,8 +311,23 @@ func (n *Nexus) getResponseBody(jsonFile string, m *Mod) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
+
+	err = n.checkForErrorJSON(body)
+	if err != nil {
+		return body, err
+	}
+
 	return body, nil
+}
+
+func (n *Nexus) checkForErrorJSON(body []byte) error {
+	e := &NexusError{}
+	err := json.Unmarshal(body, e)
+	if err != nil {
+		return nil // error parsing means, that this not error
+	}
+	return e
 }
 
 // register actually do the work, for description look at Register()

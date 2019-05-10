@@ -62,6 +62,9 @@ func TestGetDownloadLink(t *testing.T) {
 	}
 	t.Log(s)
 	//https://cf-files.nexusmods.com/cdn/101/48577/NorthernUI-48577-1-2-1-1555628981.zip?md5=DmRyKCA4PcwlzolmW18nmQ&expires=1556673526&user_id=1
+	// if there is error:
+	//  json: cannot unmarshal object into Go value of type nexusapi.ModDownload
+	// {"code":410,"message":"This link has expired - please visit the mod page again to get a new link"}
 }
 
 // you have to provide actual data from nxm link to make this test work
@@ -76,7 +79,7 @@ func TestGetModInfo(t *testing.T) {
 	}
 	apikey := getApikey(t)
 	n := New("My app test", "0.1", "not used", apikey)
-	mi, err := n.GetModInfo(m)
+	mi, err := n.GetModFileInfo(m)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,6 +94,18 @@ func TestGetModInfo(t *testing.T) {
 	//        Restored the extended console commands (“!xxn commandName”) patch. It was disabled during a previous version and development got hectic enough that I forgot to enable it again.
 	//        Removed some unneeded debug logging code from a patch to the dialogue menu.}
 	//
+}
+
+func TestGetModByMD5(t *testing.T) {
+
+	apikey := getApikey(t)
+	n := New("My app test", "0.1", "not used", apikey)
+	md5i, err := n.GetModByMD5("99ac0362b889f8563505932028e14fbf", "skyrim")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", md5i)
+
 }
 
 func TestCreateHeaders(t *testing.T) {

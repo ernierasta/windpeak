@@ -6,12 +6,3 @@ type ModManager interface {
 	ReadModMeta() error
 	GetProfile(name string) []string
 }
-
-//Creator interface represents methods needed while creating modpack
-type Creator interface {
-	WatchModInstall() error
-}
-
-//User interface needed while installing modpack
-type User interface {
-}

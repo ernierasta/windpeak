@@ -2,6 +2,9 @@ package gui
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	_ "image/gif"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -90,10 +93,59 @@ func (g *Gui) show() {
 	g.w.SetChild(g.tabs)
 	g.w.SetMargined(true)
 
+	g.tabs.Append("Mod manager", g.modmanagerTab(), MP_ID+1)
+	g.tabs.SetMargined(MP_ID+1, true)
 	g.tabs.Append("Modpack", g.modpackTab(g.settings.Modpack), MP_ID)
 	g.tabs.SetMargined(MP_ID, true)
 
 	g.w.Show()
+}
+
+func (g *Gui) modmanagerTab() ui.Control {
+	grp := ui.NewGroup("Select mod manager you want to use:")
+	grp.SetMargined(true)
+	grid := ui.NewGrid()
+	grid.SetPadded(true)
+	grp.SetChild(grid)
+	radio := ui.NewRadioButtons()
+	radio.Append("Mod Organizer 2")
+	radio.Append("Wrye Bash")
+	grid.Append(ui.NewHorizontalSeparator(), 0, 0, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 1, 0, 1, 1, false, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 2, 0, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 0, 1, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(radio, 1, 1, 1, 1, false, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 2, 1, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 0, 2, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewButton("Choose"), 1, 2, 1, 1, false, ui.AlignCenter, false, ui.AlignCenter)
+	grid.Append(ui.NewHorizontalSeparator(), 2, 2, 1, 1, true, ui.AlignCenter, false, ui.AlignCenter)
+
+	return grp
+}
+
+// TODO: this is useless until libui will have support for images
+func (g *Gui) loadLogo() *ui.Image {
+	file := "assets/Windpeak_Inn_Shop_Sign.gif"
+	logo, err := os.Open(file)
+	if err != nil {
+		ui.MsgBoxError(g.w, "Error", "Can not open logo image from: "+file+", err: "+err.Error())
+		return &ui.Image{}
+	}
+	defer logo.Close()
+
+	img, _, err := image.Decode(logo)
+	if err != nil {
+		ui.MsgBoxError(g.w, "Error", "Can not decode logo image, err:"+err.Error())
+		return &ui.Image{}
+	}
+
+	rect := img.Bounds()
+	logoRGBA := image.NewRGBA(rect)
+	draw.Draw(logoRGBA, rect, img, rect.Min, draw.Src)
+
+	i := ui.NewImage(437, 512)
+	i.Append(logoRGBA)
+	return i
 }
 
 func (g *Gui) modpackTab(mp *Modpack) ui.Control {
