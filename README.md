@@ -14,7 +14,7 @@ Wasted some time by investigating EOF error from Nexus websocket - turns out, th
 
 **2019-05-07**
 Creator GUI is almost complete for now. It has almost all functions to test real modpack creation. I had needed to workaround few libui/ui library missing features. I could use different UI lib, but I like this one and mainly - it is multiplatform. GUI code is nothing I am proud about, but for now it is good enough. We will see after user GUI will be written. So now, I will probably design and write modpack configuration files parser boiler-plate code.
-BTW: I was also looking into the Morrowind modding and while it has some quirks, it should be possible to support also Morrowind and especially OpemMW, where Linux support would be useful. I should collect some notes on this topic.
+BTW: I was also looking into the Morrowind modding and while it has some quirks, it should be possible to support also Morrowind and especially OpenMW, where Linux support would be useful. I should collect some notes on this topic.
 
 **2019-05-10**
 Some investigation done and I had tested a lot of options how to detect changes. I need it to allow creators to create mod definitions (almost?) automatically if they are using Wrye Bash. For now there will be 3 processes. I will snapshot gamedir before mod is installed, then after installation/configuration. I will also make snapshot of unpacked mod. This will allow to make:
