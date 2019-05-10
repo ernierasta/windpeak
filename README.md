@@ -47,5 +47,5 @@ This should be enough to create modpack. The only missing part I can think now i
 
 Yes, there are is [Automaton](https://github.com/metherul/Automaton) which is my inspiration, but I find it not as flexible as I would like. And it is written in C# so no option to me to contribute.
 
-To answer - why I should such tool. Usually I spend so much time installing mods for my games, that I have no time to play. Tools as this will cut installation time to minimum. But what is VERY IMPORTANT for me - mod authors or Nexus are NOT HURT in the process. User still have to download mod himself. Only install process is automated. In fact, this not different from what mod managers are doing.
+To answer - why I want to have such tool. Usually I spend so much time installing mods for my games, that I have no time to play. Tools as this will cut installation time to minimum. But what is VERY IMPORTANT for me - mod authors or Nexus are NOT HURT in the process. User still have to download mod himself. Only install process is automated. In fact, this not different from what mod managers are doing.
 
