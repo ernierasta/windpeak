@@ -26,6 +26,11 @@ Some investigation done and I had tested a lot of options how to detect changes.
 Mod directory then will contain meta file with mod info and patches. Modpack author can also decide to put there files, which will overwrite destination file completely. And there are steps, but I have few ideas how to do them, we will see later.
 This should be enough to create modpack. The only missing part I can think now is action of deleting files, which could be necessary for modpack updating (when you want remove some file or whole mod).
 
+**2019-5-16**
+No new code today. Some server work takes all my free time. But I started implementing 7z (zip & rar) unpacking ... and it was pain. There are currently 2 wrappers for 7zip functionality in golang. I wanted to go with library which uses 7zip.dll (7zip.so) which would be more elagant. While I figured out how to do that on Linux (you need to compile 2 c/c++ libraries) i had problems on Windows(not going into details, even if figure it out, there will be probably no option to generate 32-bit version). In short I will use 7z.exe (p7zip) wrapper probably. Need to make more tests. This is esential to have unpacking/packing done well.
+
+BTW: I mentioned this project in youtube comments today. If you come from there - thanks for stopping by. :-)
+
 ## Planned features
 
 - Multiplatform - Linux and Windows will work. Darwin will remain untested/unsupported until someone will want to test it there.
